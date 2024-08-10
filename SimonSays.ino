@@ -1,6 +1,5 @@
-//Last modified january 5, 2023, Adalin Zimmermann
-//TODO: Place Hall's button sense method, change lights correct sequence to be more obvious, fail out of an incorrect code immediately rather than at the end
-//Light order is GBYR
+//Last modified August 9, 2024, Adalin Zimmermann
+//Light order on the panel is GBYR
 int redLed = 13;
 int greenLed = 12;
 int yellowLed = 11;
@@ -59,6 +58,7 @@ void toggleLights(bool onOff)
 }
 
 //Correct code entered light sequence
+//Should light lights in order from left to right to left
 void correctLightSequence()
 {
   toggleLights(false);
@@ -103,8 +103,9 @@ void incorrectLightSequence()
 }
 
 
-//BUG may have to invert on/off for lights
 //helper function that activates a specific light based on input int and entered code type
+//0 lights was added to allow the program to still check for button input while the lights were off
+//Because this method automatically turns the last light off at the end, the light 0 function works as intended
 bool nextLight(int light, int codeNum)
 {
   if(light == 1)
@@ -129,17 +130,21 @@ bool nextLight(int light, int codeNum)
   }
   else if(light == 0)
   {
+    //All off
     activeLight = 1;
   }
     timer = 0;
   digitalWrite(activeLight, HIGH);
+  //This section runs a periodic delay of 10ms, 100 times to add to a full second of each light lit
+  //During each of these cycles, the program determines whether or not a button was being pressed at that time
   while(timer <= 100) {
     //Check if a key was pressed
     if(checkKeyPress() != 0)
     {
       initialKey = checkKeyPress();
-      //test the entered code
+      //This delay has been entered since human reflexes are way slower than 10 ms so any button pressed would cause a button to register twice
       delay(300);
+      //Test the code usin the button that was pressed and the version of the code to test against
       if(testCodes(initialKey, codeNum))
       {
         correctLightSequence();
@@ -154,6 +159,7 @@ bool nextLight(int light, int codeNum)
     delay(10);
     timer += 1;
   }
+  //If no button was pressed we simply return false
   digitalWrite(activeLight, LOW); 
   return false; 
 }
@@ -180,6 +186,7 @@ int checkKeyPress() {
 
 
 //this method is called to detect which key we want pressed and wait for that key to be unpressed before returning true
+//Cannibalized from another project I made using piano keys, hence variable names
 static bool waitForKey(int wantedKey) {
     //weve added a delay here to account for some input issues
     delay(50);
@@ -190,9 +197,9 @@ static bool waitForKey(int wantedKey) {
       //key has not been pressed
       key = checkKeyPress();     
       }
-      //when key is pressed, we want to wait for it to be unpressed
       //Here we say what key has been pressed
       pressedKey = key;
+      //Now we want to wait until the user lets go of the key
       while(true){
       while(key == pressedKey){
         key = checkKeyPress();  
